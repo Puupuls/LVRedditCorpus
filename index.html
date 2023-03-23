@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LVRedditCorpus</title>
+    <style>
+        .post{
+            border: 1px solid #aaa;
+            padding: 10px 10px 10px 25px;
+            margin: 10px;
+        }
+        .comment{
+            border: 1px solid #aaa;
+            padding: 5px 5px 5px 25px;
+        }
+    </style>
+
+    <script>
+        let curOffset = 0;
+        let curLimit = 10;
+
+        function genTechnicalInfo(data) {
+            let technicalInfo = document.createElement('div');
+            let lang_confidences_str = '{';
+            for (let lang in data.lang_confidences) {
+                lang_confidences_str += `${lang}: ${data.lang_confidences[lang]}, `;
+            }
+            lang_confidences_str += '}';
+
+            let sentimentExplanation = '';
+            for(let key in data.sentiment_detailed) {
+                sentimentExplanation += `> ${key}: ${data.sentiment_detailed[key]}<br/>`;
+            }
+
+            technicalInfo.innerHTML = `
+                <p style="color: #888">
+                Score: ${data.score}<br/>
+                Detected language: ${data.lang} (${lang_confidences_str})<br/>
+                Sentiment: ${data.sentiment}<br/>
+                ${sentimentExplanation}
+                Link: <a href="https://www.reddit.com${data.permalink}" target="_blank" style="color: #aaaaaa">https://www.reddit.com${data.permalink}</a>
+                </p>`;
+            return technicalInfo;
+        }
+
+        function genCommentTree(comments) {
+            let commentTree = document.createElement('div');
+            for (let i = 0; i < comments.length; i++) {
+                let comment = comments[i];
+                let commentDiv = document.createElement('div');
+                commentDiv.className = 'comment';
+                commentDiv.innerHTML = `<p>${comment.body}</p>`;
+                commentDiv.appendChild(genTechnicalInfo(comment));
+                commentTree.appendChild(commentDiv);
+                if (comment.replies.length > 0) {
+                    commentDiv.appendChild(genCommentTree(comment.replies));
+                }
+            }
+            return commentTree;
+        }
+
+        let gettingData = false;
+        function getStats(offset, limit) {
+            if (gettingData) {
+                return;
+            }
+            gettingData = true;
+            fetch(
+                `/data?offset=${offset}&limit=${limit}`,
+                {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                }
+            ).then(response => response.json())
+                .then(data => {
+                    gettingData = false;
+                    curOffset = offset;
+                    curLimit = limit;
+
+                    let posts = document.getElementById('posts');
+                    posts.innerHTML = '';
+                    let postsData = data.posts;
+                    for (let i = 0; i < postsData.length; i++) {
+                        let post = postsData[i];
+                        let postDiv = document.createElement('div');
+                        postDiv.className = 'post';
+
+                        let crosspost = '';
+                        if (post.crosspost_parent_list.length > 0) {
+                            crosspost = `<p>Crosspost from <a href="https://www.reddit.com${post.crosspost_parent_list[0].permalink}" target="_blank">https://www.reddit.com${post.crosspost_parent_list[0].permalink}</a></p>`;
+                        }
+
+                        let poll = '';
+                        if (post.poll_data != null) {
+                            poll = `<p>Poll: ${post.poll_data.options.map(option => option.text).join(', ')}</p>`;
+                        }
+
+                        postDiv.innerHTML = `
+                            <h3>${post.title}</h3>
+                            <p>${post.selftext != '[removed]'? post.selftext : post.original_selftext}</p>
+                            ${crosspost}
+                            ${poll}
+                        `;
+
+                        postDiv.appendChild(genTechnicalInfo(post));
+                        postDiv.appendChild(genCommentTree(post.replies));
+                        posts.appendChild(postDiv);
+                    }
+                    let statsDiv = document.getElementById('stats');
+                    statsDiv.innerHTML = `
+                        <p>Showing ${offset + 1} - ${offset + postsData.length} of ${data.stats_all.posts}</p>
+                    `;
+                })
+        }
+        getStats(curOffset, curLimit);
+    </script>
+</head>
+<body>
+<div id="stats">
+
+</div>
+<div>
+    <button onclick="getStats(Math.max(curOffset - curLimit, 0), curLimit)">Prev</button>
+    <button onclick="getStats(curOffset + curLimit, curLimit)">Next</button>
+</div>
+<div id="posts">
+
+</div>
+</body>
+</html>

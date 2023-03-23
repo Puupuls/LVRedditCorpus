@@ -7,7 +7,7 @@ import requests
 from loguru import logger
 from tqdm import tqdm
 
-from stats import print_stats
+from stats import get_stats
 from tagger import tag_recursive
 
 FILE_PATH = 'data/reddit_data_{subredit}.json'
@@ -30,7 +30,6 @@ def cleanup_comments(comments):
                 'id': comment['data'].get('id', None),
                 'subreddit_id': comment['data'].get('subreddit_id', None),
                 'subreddit': comment['data'].get('subreddit', None),
-                'comment_type': comment['data'].get('comment_type', None),
                 'created_utc': comment['data'].get('created_utc', None),
                 'author': comment['data'].get('author', None),
                 'author_fullname': comment['data'].get('author_fullname', None) if comment['data'].get('author', '[deleted]') != '[deleted]' else '[deleted]',
@@ -54,8 +53,6 @@ def cleanup_comments(comments):
                     } for i in comment['data'].get('all_awardings', [])
                 ],
                 'score': comment['data'].get('score', 0),
-                'ups': comment['data'].get('ups', 0),
-                'downs': comment['data'].get('downs', 0),
                 'body': comment['data'].get('body', None),
                 'depth': comment['data'].get('depth', None),
                 'controversiality': comment['data'].get('controversiality', None),
@@ -98,8 +95,6 @@ def process_post(post, it=0):
                 'selftext': post.get('selftext', None),
                 'original_selftext': original_post.get('selftext', None),
                 'score': post.get('score', 0),
-                'ups': post.get('ups', 0),
-                'downs': post.get('downs', 0),
                 'over_18': post.get('over_18', None),
                 'permalink': post.get('permalink', None),
                 'url': post.get('url', None),
@@ -212,7 +207,7 @@ def scrape_subreddit(subreddit, n_new_messages=1000):
         json.dump(new_data, f, indent=4, ensure_ascii=False)
         logger.info(f'Saved {len(new_data)} posts to {path}.')
         os.rename(path, path.replace('.json', f'_{len(new_data)}_{datetime.now().isoformat()}.json'))
-    print_stats(new_data)
+    get_stats(new_data)
 
 
 scrape_subreddit('latvia', 1_000_000)
