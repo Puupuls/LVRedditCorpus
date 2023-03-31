@@ -13,7 +13,7 @@ def flatten_comments_from_posts(comments):
     return replies
 
 
-def get_stats(data, print=True):
+def get_stats(data, print_to_console=True):
     stats = {}
     subsets = {}
 
@@ -35,11 +35,11 @@ def get_stats(data, print=True):
     stats['max_comment_length'] = max([len(comment['body']) for comment in comments]) if comments else 0
     stats['median_comment_length'] = sorted([len(comment['body']) for comment in comments])[len(comments) // 2] if comments else 0
 
-    posts_with_body = [post for post in data if post['selftext'] and 'View Poll' not in post['selftext']]
+    posts_with_body = [post for post in data if post['body'] and 'View Poll' not in post['body']]
     stats['posts_with_body'] = len(posts_with_body)
     subsets['posts_with_body'] = posts_with_body
 
-    posts_with_body_and_comments = [post for post in posts_with_comments if post['selftext']]
+    posts_with_body_and_comments = [post for post in posts_with_comments if post['body']]
     stats['posts_with_body_and_comments'] = len(posts_with_body_and_comments)
     subsets['posts_with_body_and_comments'] = posts_with_body_and_comments
 
@@ -86,7 +86,7 @@ def get_stats(data, print=True):
     negative_sentiment_posts = [post for post in data if post['sentiment'] == 'negative']
     stats['negative_sentiment_posts'] = len(negative_sentiment_posts)
     subsets['negative_sentiment_posts'] = negative_sentiment_posts
-    if print:
+    if print_to_console:
         print(f"Posts: {stats['posts']}")
         print(f'Comments: {stats["comments"]}')
         print(f"Posts with comments: {stats['posts_with_comments']}")

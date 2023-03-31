@@ -99,7 +99,7 @@
 
                         postDiv.innerHTML = `
                             <h3>${post.title}</h3>
-                            <p>${post.selftext != '[removed]'? post.selftext : post.original_selftext}</p>
+                            <p>${post.body != '[removed]'? post.body : post.original_body}</p>
                             ${crosspost}
                             ${poll}
                         `;

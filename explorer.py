@@ -11,7 +11,7 @@ app = flask.Flask(
 )
 app.debug = True
 
-CUR_FILE = 'data/reddit_data_latvia_8169.json'
+CUR_FILE = 'data/reddit_data_latvia_8720.json'
 
 
 @app.route('/')
@@ -24,7 +24,7 @@ def data():
     with open(CUR_FILE, 'r') as f:
         posts = json.load(f)
 
-    stats_all, _ = get_stats(posts, print=False)
+    stats_all, _ = get_stats(posts, print_to_console=False)
 
     if request.args.get('search'):
         search = request.args.get('search')
@@ -46,7 +46,7 @@ def data():
         limit = int(request.args.get('limit'))
         posts = posts[:limit]
 
-    stats, _ = get_stats(posts, print=False)
+    stats, _ = get_stats(posts, print_to_console=False)
 
     return flask.jsonify({
         'posts': posts,

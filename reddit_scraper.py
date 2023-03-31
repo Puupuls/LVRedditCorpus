@@ -7,6 +7,7 @@ import requests
 from loguru import logger
 from tqdm import tqdm
 
+from dataset_extract import extract_dataset
 from stats import get_stats
 from tagger import tag_recursive
 
@@ -28,6 +29,7 @@ def cleanup_comments(comments):
         if 'replies' in comment['data']:
             new_comment = {
                 'id': comment['data'].get('id', None),
+                'name': comment['data'].get('name', None),
                 'subreddit_id': comment['data'].get('subreddit_id', None),
                 'subreddit': comment['data'].get('subreddit', None),
                 'created_utc': comment['data'].get('created_utc', None),
@@ -92,8 +94,8 @@ def process_post(post, it=0):
                 'author': post.get('author', None),
                 'author_fullname': post.get('author_fullname', None) if post.get('author', '[deleted]') != '[deleted]' else '[deleted]',
                 'title': post.get('title', None),
-                'selftext': post.get('selftext', None),
-                'original_selftext': original_post.get('selftext', None),
+                'body': post.get('selftext', None),
+                'original_body': original_post.get('selftext', None),
                 'score': post.get('score', 0),
                 'over_18': post.get('over_18', None),
                 'permalink': post.get('permalink', None),
@@ -208,6 +210,11 @@ def scrape_subreddit(subreddit, n_new_messages=1000):
         logger.info(f'Saved {len(new_data)} posts to {path}.')
         os.rename(path, path.replace('.json', f'_{len(new_data)}_{datetime.now().isoformat()}.json'))
     get_stats(new_data)
+
+    dataset = extract_dataset(new_data)
+    print(f"Dataset size: {len(dataset)}")
+    with open('data/dataset.json', 'w') as f:
+        json.dump(dataset, f, indent=4, ensure_ascii=False)
 
 
 scrape_subreddit('latvia', 1_000_000)
