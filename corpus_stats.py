@@ -1,6 +1,11 @@
 import json
+import re
+from collections import Counter
+from statistics import median
 
-file = 'data/reddit_data_latvia_8169.json'
+from matplotlib import pyplot as plt
+
+file = 'data/reddit_data_latvia_23897_2023-04-15T00:30:09.459249_lv.json'
 
 
 def flatten_comments_from_posts(comments):
@@ -114,6 +119,45 @@ def get_stats(data, print_to_console=True):
         print(f"Positive sentiment posts: {stats['positive_sentiment_posts']}")
         print(f"Neutral sentiment posts: {stats['neutral_sentiment_posts']}")
         print(f"Negative sentiment posts: {stats['negative_sentiment_posts']}")
+
+        for post in data:
+            # Replace links with #link
+            post['body'] = re.sub("\[.+\]\(https?://.*\) ?", '#link', post['body'])
+            post['body'] = re.sub("https?://.* ?", '#link', post['body'])
+        for comment in comments:
+            comment['body'] = re.sub("\[.+\]\(https?://.*\) ?", '#link', comment['body'])
+            comment['body'] = re.sub("https?://.* ?", '#link', comment['body'])
+
+
+        chars = Counter(
+            [char for post in data for char in post['body']] + [char for comment in comments for char in comment['body']]
+        )
+        print(f"Most common characters: {chars.most_common(10)}")
+        print(f"Least common characters: {chars.most_common()[:-11:-1]}")
+        print(f"Character count: {sum(chars.values())} (unique: {len(chars)})")
+
+        lower_chars = Counter(
+            [char for post in data for char in post['body'].lower()] + [char for comment in comments for char in comment['body'].lower()]
+        )
+        print(f"Most common lower characters: {lower_chars.most_common(10)}")
+        print(f"Least common lower characters: {lower_chars.most_common()[:-11:-1]}")
+        print(f"Lower character count: {sum(lower_chars.values())} (unique: {len(lower_chars)})")
+
+        words = Counter(
+            [word for post in data for word in re.sub(r'[.,?!]', ' ', post['body']).lower().split() if word] +
+            [word for comment in comments for word in re.sub(r'[.,?!]', ' ', comment['body']).lower().split() if word]
+        )
+        print(f"Most common words: {words.most_common(10)}")
+        print(f"Least common words: {words.most_common()[:-11:-1]}")
+        print(f"Word count: {sum(words.values())} (unique: {len(words)})")
+
+        word_lengths = Counter(
+            [len(word) for word in words]
+        )
+        print(f"Max word length: {max(word_lengths)} (count: {word_lengths[max(word_lengths)]}) (examples: {', '.join([word for word, count in words.items() if len(word) == max(word_lengths)])}))")
+        print(f"Min word length: {min(word_lengths)} (count: {word_lengths[min(word_lengths)]})")
+        print(f"Average word length: {sum([word_length * count for word_length, count in word_lengths.items()]) / sum(word_lengths.values())}")
+        print(f"Most common word lengths: {word_lengths.most_common(10)}")
 
     return stats, subsets
 

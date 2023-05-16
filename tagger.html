@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LVRedditCorpus Labeling</title>
+    <style>
+        .post{
+            border: 1px solid #aaa;
+            padding: 10px 10px 10px 25px;
+            margin: 10px;
+        }
+        .positive.active{
+            background-color: #00ff00;
+        }
+        .neutral.active{
+            background-color: #ffff00;
+        }
+        .negative.active{
+            background-color: #ff0000;
+        }
+    </style>
+
+    <script>
+        function save_vote(post_id, vote) {
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/tagger/{{name}}/save', true);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+            xhr.send(JSON.stringify({
+                id: post_id,
+                sentiment: vote
+            }));
+            let post = document.getElementById(post_id);
+            post.getElementsByClassName('positive')[0].classList.remove('active');
+            post.getElementsByClassName('neutral')[0].classList.remove('active');
+            post.getElementsByClassName('negative')[0].classList.remove('active');
+            post.getElementsByClassName(vote)[0].classList.add('active');
+        }
+    </script>
+</head>
+<body>
+{% for post in dataset %}
+    <div class="post" id="{{post.id}}">
+        <p>{{ post.body | safe }}</p>
+        <button onclick="save_vote('{{ post.id }}', 'positive');" class="positive {{'active' if post.get('labels', {})[name] == 'positive' else ''}}">Positive</button>
+        <button onclick="save_vote('{{ post.id }}', 'neutral');" class="neutral {{'active' if post.get('labels', {})[name] == 'neutral' else ''}}">Neutral</button>
+        <button onclick="save_vote('{{ post.id }}', 'negative');" class="negative {{'active' if post.get('labels', {})[name] == 'negative' else ''}}">Negative</button>
+        <br/>
+        <a href="https://reddit.com{{ post.permalink }}" target="_blank">Link</a>
+    </div>
+{% endfor %}
+</body>
+</html>

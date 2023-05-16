@@ -7,9 +7,8 @@ import requests
 from loguru import logger
 from tqdm import tqdm
 
-from dataset_extract import extract_dataset
-from stats import get_stats
-from tagger import tag_recursive
+from corpus_tagger import tag_recursive
+from LVReddit_extract import extract_dataset
 
 FILE_PATH = 'data/reddit_data_{subredit}.json'
 os.makedirs('data', exist_ok=True)
@@ -155,15 +154,6 @@ def scrape_subreddit(subreddit, n_new_messages=1000):
             try:
                 i = 0
                 while i < 3:
-                    # response = requests.get(
-                    #     f'https://www.reddit.com/r/{subreddit}/new.json',
-                    #     headers={'User-agent': 'Mozilla/5.0'},
-                    #     params={
-                    #         'limit': 100,
-                    #         'count': len(new_data),
-                    #         'after': new_data[-1]['name'] if new_data else None,
-                    #     }
-                    # )
                     response = requests.get(
                         f'https://api.pushshift.io/reddit/search/submission',
                         headers={'User-agent': 'Mozilla/5.0'},
@@ -201,19 +191,18 @@ def scrape_subreddit(subreddit, n_new_messages=1000):
 
             if len(new_data) - last_save > 2000:
                 last_save = len(new_data)
-                with open(path, 'w') as f:
+                with open(path, 'w', encoding='utf8') as f:
                     json.dump(new_data, f, indent=4, ensure_ascii=False)
                     logger.info(f'Saved {len(new_data)} posts to {path}.')
 
     with open(path, 'w') as f:
         json.dump(new_data, f, indent=4, ensure_ascii=False)
         logger.info(f'Saved {len(new_data)} posts to {path}.')
-        os.rename(path, path.replace('.json', f'_{len(new_data)}_{datetime.now().isoformat()}.json'))
-    get_stats(new_data)
+        os.rename(path, path.replace('.json', f'_{len(new_data)}.json'))
 
     dataset = extract_dataset(new_data)
-    print(f"Dataset size: {len(dataset)}")
-    with open('data/dataset.json', 'w') as f:
+    print(f"LVReddit Dataset size: {len(dataset)}")
+    with open('data/LVReddit_dataset.json', 'w') as f:
         json.dump(dataset, f, indent=4, ensure_ascii=False)
 
 

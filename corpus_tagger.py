@@ -3,32 +3,30 @@ import json
 import torch
 from langdetect import detect_langs
 from loguru import logger
-from tqdm import tqdm
 from nltk.sentiment import SentimentIntensityAnalyzer
-from transformers import AutoModelForSequenceClassification, pipeline
-from transformers import AutoTokenizer, AutoConfig
-from scipy.special import softmax
+from tqdm import tqdm
+from transformers import pipeline
 
-file = 'data/reddit_data_latvia_8720.json'
+file = 'data/reddit_data_latvia_16753_2023-03-30T01:30:38.975318.json'
 
-with open('SentimentWordsLV/positive.txt', 'r') as f:
+with open('SentimentWordsLV/positive.txt', 'r', encoding='utf8') as f:
     for i in range(10):
         f.readline()
     SentimentWordsLV_positive = set([word.strip() for word in f.readlines()])
-with open('SentimentWordsLV/negative.txt', 'r') as f:
+with open('SentimentWordsLV/negative.txt', 'r', encoding='utf8') as f:
     for i in range(10):
         f.readline()
     SentimentWordsLV_negative = set([word.strip() for word in f.readlines()])
 
-with open('om/updates/poz.final.txt', 'r') as f:
+with open('om/updates/poz.final.txt', 'r', encoding='utf8') as f:
     for i in range(1):
         f.readline()
     om_positive = set([word.strip() for word in f.readlines()])
-with open('om/updates/neg.final.txt', 'r') as f:
+with open('om/updates/neg.final.txt', 'r', encoding='utf8') as f:
     for i in range(1):
         f.readline()
     om_negative = set([word.strip() for word in f.readlines()])
-with open('om/updates/stopwords.txt', 'r') as f:
+with open('om/updates/stopwords.txt', 'r', encoding='utf8') as f:
     # List of words that do not hold sentiment....
     # And some that do, like "Paldies", "😊", "👍" at the end
     for i in range(2):
@@ -108,12 +106,14 @@ def tag_recursive(post):
         pass
 
     sentiment = (
-                        post['sentiment_detailed']['SentimentWordsLV_positive'] - post['sentiment_detailed']['SentimentWordsLV_negative'] +
-                        post['sentiment_detailed']['om_positive'] - post['sentiment_detailed']['om_negative']
-                ) / 2 + \
-                (
-                        post['sentiment_detailed']['xml_roberta_positive'] - post['sentiment_detailed']['xml_roberta_negative']
-                ) * 2
+            (
+                    post['sentiment_detailed']['xml_roberta_positive'] - post['sentiment_detailed']['xml_roberta_negative']
+            ) * 2
+            # + (
+            #         post['sentiment_detailed']['SentimentWordsLV_positive'] - post['sentiment_detailed']['SentimentWordsLV_negative'] +
+            #         post['sentiment_detailed']['om_positive'] - post['sentiment_detailed']['om_negative']
+            # )
+    )
 
     if sentiment > 1:
         post['sentiment'] = 'positive'

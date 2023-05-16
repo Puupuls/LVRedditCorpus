@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LVRedditCorpus Labeling</title>
+    <style>
+        .post{
+            border: 1px solid #aaa;
+            padding: 10px 10px 10px 25px;
+            margin: 10px;
+        }
+        .positive{
+            color: #00ff00;
+        }
+        .neutral{
+            color: #ffff00;
+        }
+        .negative{
+            color: #ff0000;
+        }
+    </style>
+    <script src='https://cdn.plot.ly/plotly-2.20.0.min.js'></script>
+</head>
+<body>
+<h1>LVRedditCorpus Labeling results</h1>
+<table id="labels_per_labeler">
+    <tr>
+        <th>Labeler</th>
+        <th>Positive</th>
+        <th>Neutral</th>
+        <th>Negative</th>
+        <th>Total</th>
+    </tr>
+    {% for labeler, labels in sentiment_by_labeler.items() %}
+        <tr>
+            <td>{{ labeler }}</td>
+            <td>{{ labels['positive'] }}</td>
+            <td>{{ labels['neutral'] }}</td>
+            <td>{{ labels['negative'] }}</td>
+            <td>{{ labels['positive'] + labels['neutral'] + labels['negative'] }}</td>
+        </tr>
+    {% endfor %}
+</table>
+<table id="post_count_per_matching_label_count">
+    <tr>
+        <th>Matching Label Count</th>
+        <th>Post Count</th>
+    </tr>
+    {% for label_count, posts in posts_with_largest_same_vote_count.items() %}
+        <tr>
+            <td>{{ label_count }}</td>
+            <td>{{ posts | length }}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+<h1>Labeler vs Other average</h1>
+<!--{% for labeler, matrix in confusion_matrices_per_labeler.items() %}-->
+<!--    <div id="confusion_matrix_{{labeler}}" style="width: 500px; height: 500px"></div>-->
+<!--    <script>-->
+<!--        let data_{{ labeler[:3] }} = [-->
+<!--            {-->
+<!--                z: {{ matrix | tojson }},-->
+<!--                x: ['Negative', 'Neutral', 'Positive'],-->
+<!--                y: ['Negative', 'Neutral', 'Positive'],-->
+<!--                type: 'heatmap',-->
+<!--                colorscale: [-->
+<!--                    [0, '#ffffff'],-->
+<!--                    [1, '#000000']-->
+<!--                ]-->
+<!--            }-->
+<!--        ];-->
+<!--        let layout_{{ labeler[:3] }} = {-->
+<!--            title: '{{ labeler }}',-->
+<!--            xaxis: {-->
+<!--                title: 'Predicted'-->
+<!--            },-->
+<!--            yaxis: {-->
+<!--                title: 'Average (excluding this labeler)'-->
+<!--            },-->
+<!--            annotations: []-->
+<!--        }-->
+<!--        for ( let i = 0; i < data_{{ labeler[:3] }}[0].y.length; i++ ) {-->
+<!--            for ( let j = 0; j < data_{{ labeler[:3] }}[0].x.length; j++ ) {-->
+<!--                let currentValue = data_{{ labeler[:3] }}[0].z[i][j];-->
+<!--                let textColor = 'red';-->
+
+<!--                let result = {-->
+<!--                    xref: 'x1',-->
+<!--                    yref: 'y1',-->
+<!--                    x: data_{{ labeler[:3] }}[0].x[j],-->
+<!--                    y: data_{{ labeler[:3] }}[0].y[i],-->
+<!--                    text: Math.round(currentValue * 100) / 100,-->
+<!--                    showarrow: false,-->
+<!--                    font: {-->
+<!--                        color: textColor-->
+<!--                    }-->
+<!--                };-->
+<!--                layout_{{ labeler[:3] }}.annotations.push(result);-->
+<!--            }-->
+<!--        }-->
+<!--        Plotly.newPlot(-->
+<!--            'confusion_matrix_{{labeler}}',-->
+<!--            data_{{ labeler[:3] }},-->
+<!--            layout_{{ labeler[:3] }}-->
+<!--        );-->
+<!--    </script>-->
+<!--{% endfor %}-->
+<h1>Detailed:</h1>
+{% for post in dataset %}
+    <div class="post" id="{{post.id}}">
+        <p>{{ post.body | safe }}</p>
+        <p>
+            {% for labeler, label in post.labels.items() %}
+                {{ labeler }}: <span class="label {{label}}">{{ label }}</span><br/>
+            {% endfor %}
+        </p>
+    </div>
+{% endfor %}
+</body>
+</html>
