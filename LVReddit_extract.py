@@ -29,7 +29,7 @@ def extract_dataset(data):
                     'permalink': post['permalink'],
                     'labels': {
                         'twitter-xlm-roberta-base-sentiment': 'positive' if post['sentiment_detailed']['xml_roberta_positive'] > 0.5 else 'negative' if post['sentiment_detailed']['xml_roberta_negative'] > 0.5 else 'neutral',
-                        'om': 'positive' if om_sentiment > 1 else 'negative' if om_sentiment < -1 else 'neutral',
+                        'om': 'positive' if om_sentiment > 0 else 'negative' if om_sentiment < 0 else 'neutral',
                         'SentimentWordsLV': 'positive' if SentimentWordsLV_sentiment > 1 else 'negative' if SentimentWordsLV_sentiment < -1 else 'neutral',
                     }
                 }
